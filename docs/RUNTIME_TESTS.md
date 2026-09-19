@@ -29,3 +29,13 @@ The emulator cannot validate recognition accuracy for the intended speaker.
 The next hardware test must cover her normal, high, low, and naturally changing voice registers using the real tablet microphone.
 
 The four-octave requirement remains an acceptance criterion; the calibration front-end accepts a broad pitch range and adjusts microphone gain, but recognition quality must be measured with her actual voice rather than inferred from an emulator.
+
+## 0.1.2 hardening
+
+- Visible Undo and Redo buttons tested in the editor.
+- Undo reduced a two-word edit to one word; Redo restored the second word.
+- Document saves now use atomic replacement where supported.
+- Save sequencing prevents an older queued autosave from overwriting a newer manual save.
+- Orphaned `.stype.tmp` files are recovered automatically on restart.
+- Crash-recovery fixture restored as a normal document and appeared in the shelf word count.
+- Legacy `Documents/SimpleType` data is migrated into `Documents/Wen`.

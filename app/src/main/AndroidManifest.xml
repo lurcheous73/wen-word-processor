@@ -4,7 +4,7 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="false"
         android:icon="@drawable/ic_simpletype"
-        android:label="SimpleType"
+        android:label="Wen Word Processor"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".EditorActivity" />

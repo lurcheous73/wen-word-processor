@@ -6,7 +6,9 @@ import android.os.Environment;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -22,12 +24,47 @@ public final class DocumentRepository {
     public DocumentRepository(Context context) {
         File root = context.getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS);
         if (root == null) root = context.getFilesDir();
-        dir = new File(root, "SimpleType");
+        dir = new File(root, "Wen");
+        migrateLegacyFolder(new File(root, "SimpleType"));
         if (!dir.exists()) dir.mkdirs();
+        recoverTemporaryFiles();
     }
 
     public File getDirectory() {
         return dir;
+    }
+
+    private void migrateLegacyFolder(File legacy) {
+        if (!legacy.exists() || legacy.equals(dir)) return;
+        if (!dir.exists()) dir.mkdirs();
+        File[] files = legacy.listFiles();
+        if (files != null) {
+            for (File source : files) {
+                File target = new File(dir, source.getName());
+                try {
+                    if (!target.exists())
+                        Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } catch (Exception ignored) {}
+            }
+        }
+        File[] remaining = legacy.listFiles();
+        if (remaining != null && remaining.length == 0) legacy.delete();
+    }
+
+    private void recoverTemporaryFiles() {
+        File[] temps = dir.listFiles((d, name) -> name.endsWith(EXT + ".tmp"));
+        if (temps == null) return;
+        for (File temp : temps) {
+            String targetName = temp.getName().substring(0, temp.getName().length() - 4);
+            File target = new File(dir, targetName);
+            try {
+                if (!target.exists()) {
+                    Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                } else {
+                    Files.deleteIfExists(temp.toPath());
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     public String create(String requestedTitle) throws Exception {
@@ -58,10 +95,12 @@ public final class DocumentRepository {
             out.flush();
             out.getFD().sync();
         }
-        if (target.exists() && !target.delete())
-            throw new IllegalStateException("Could not replace " + target.getName());
-        if (!temp.renameTo(target))
-            throw new IllegalStateException("Could not save " + target.getName());
+        try {
+            Files.move(temp.toPath(), target.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     public void delete(String fileName) {

@@ -23,6 +23,7 @@ import android.widget.Toast;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class EditorActivity extends Activity {
     public static final String EXTRA_FILE_NAME = "file_name";
@@ -32,6 +33,7 @@ public class EditorActivity extends Activity {
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final ExecutorService io = Executors.newSingleThreadExecutor();
+    private final AtomicLong saveGeneration = new AtomicLong();
 
     private DocumentRepository repository;
     private OfflineDictationEngine dictation;
@@ -140,6 +142,14 @@ public class EditorActivity extends Activity {
         paste.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.paste));
         toolbar.addView(paste);
 
+        Button undo = button("Undo");
+        undo.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.undo));
+        toolbar.addView(undo);
+
+        Button redo = button("Redo");
+        redo.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.redo));
+        toolbar.addView(redo);
+
         dictateButton = button("Dictate");
         dictateButton.setOnClickListener(v -> {
             if (dictation.isRunning()) stopDictation();
@@ -245,18 +255,23 @@ public class EditorActivity extends Activity {
     }
 
     private void saveAsync() {
+        long generation = saveGeneration.incrementAndGet();
         DocumentData data = snapshot();
         io.execute(() -> {
             try {
                 repository.save(fileName, data);
                 runOnUiThread(() -> {
-                    saveState = "Saved";
-                    updateStats();
+                    if (generation == saveGeneration.get()) {
+                        saveState = "Saved";
+                        updateStats();
+                    }
                 });
             } catch (Exception e) {
                 runOnUiThread(() -> {
-                    saveState = "Save failed";
-                    updateStats();
+                    if (generation == saveGeneration.get()) {
+                        saveState = "Save failed";
+                        updateStats();
+                    }
                 });
             }
         });
@@ -264,9 +279,14 @@ public class EditorActivity extends Activity {
 
     private void saveSync() {
         handler.removeCallbacks(saveRunnable);
+        long generation = saveGeneration.incrementAndGet();
+        DocumentData data = snapshot();
         try {
-            repository.save(fileName, snapshot());
-            saveState = "Saved";
+            io.submit(() -> {
+                repository.save(fileName, data);
+                return null;
+            }).get();
+            if (generation == saveGeneration.get()) saveState = "Saved";
         } catch (Exception e) {
             saveState = "Save failed";
             Toast.makeText(this, "Could not save document", Toast.LENGTH_LONG).show();
