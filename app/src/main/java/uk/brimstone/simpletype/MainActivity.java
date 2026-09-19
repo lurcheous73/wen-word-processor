@@ -3,6 +3,7 @@ package uk.brimstone.simpletype;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Gravity;
@@ -46,19 +47,32 @@ public class MainActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(18), dp(18), dp(18), dp(12));
+        root.setPadding(dp(22), dp(20), dp(22), dp(14));
+        root.setBackgroundColor(Color.rgb(244, 242, 238));
 
         TextView title = new TextView(this);
-        title.setText("SimpleType");
-        title.setTextSize(28);
+        title.setText("Wen Word Processor");
+        title.setTextSize(30);
+        title.setTextColor(Color.rgb(54, 50, 57));
         title.setTypeface(FontManager.get(this, FontManager.OPEN_DYSLEXIC));
         root.addView(title);
+
+        TextView subtitle = new TextView(this);
+        subtitle.setText("Offline writing");
+        subtitle.setTextSize(15);
+        subtitle.setTextColor(Color.rgb(104, 98, 108));
+        subtitle.setPadding(0, dp(2), 0, dp(14));
+        root.addView(subtitle);
 
         LinearLayout controls = new LinearLayout(this);
         controls.setGravity(Gravity.CENTER_VERTICAL);
 
         Button add = new Button(this);
         add.setText("New document");
+        add.setAllCaps(false);
+        add.setTextSize(16);
+        add.setMinHeight(dp(52));
+        add.setContentDescription("Create a new document");
         add.setOnClickListener(v -> createDocument());
         controls.addView(add);
 
@@ -72,13 +86,24 @@ public class MainActivity extends Activity {
 
         totalWords = new TextView(this);
         totalWords.setTextSize(16);
-        totalWords.setPadding(0, dp(8), 0, dp(8));
+        totalWords.setTextColor(Color.rgb(92, 87, 96));
+        totalWords.setPadding(0, dp(12), 0, dp(10));
         root.addView(totalWords);
+
+        TextView empty = new TextView(this);
+        empty.setText("No documents yet\n\nTap New document to start writing.");
+        empty.setTextSize(20);
+        empty.setTextColor(Color.rgb(112, 106, 116));
+        empty.setGravity(Gravity.CENTER);
+        root.addView(empty, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 0, 1f));
 
         ListView list = new ListView(this);
         adapter = new DocumentAdapter();
         list.setAdapter(adapter);
-        list.setDividerHeight(1);
+        list.setEmptyView(empty);
+        list.setDividerHeight(dp(8));
+        list.setDivider(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
         list.setOnItemClickListener((parent, view, position, id) -> openDocument(documents.get(position)));
         list.setOnItemLongClickListener((parent, view, position, id) -> {
             confirmDelete(documents.get(position));
@@ -187,11 +212,15 @@ public class MainActivity extends Activity {
             } else {
                 row = new LinearLayout(MainActivity.this);
                 row.setOrientation(LinearLayout.VERTICAL);
-                row.setPadding(dp(10), dp(12), dp(10), dp(12));
+                row.setPadding(dp(16), dp(14), dp(16), dp(14));
+                row.setBackgroundResource(R.drawable.document_row);
                 title = new TextView(MainActivity.this);
                 title.setTextSize(20);
+                title.setTextColor(Color.rgb(48, 45, 51));
+                title.setTypeface(FontManager.get(MainActivity.this, FontManager.OPEN_DYSLEXIC));
                 detail = new TextView(MainActivity.this);
                 detail.setTextSize(14);
+                detail.setTextColor(Color.rgb(104, 98, 108));
                 row.addView(title);
                 row.addView(detail);
             }

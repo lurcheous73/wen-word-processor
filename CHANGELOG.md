@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.3
+
+- Polished the tablet document shelf and editor layout.
+- Renamed remaining SimpleType UI text to Wen Word Processor.
+- Added a visible document title bar in the editor.
+- Split navigation/save from the formatting and speech toolbar.
+- Added calmer spacing, colours, document cards, and an empty-library message.
+- Added TalkBack-friendly descriptions to key editing and speech controls.
+- Added project screenshots for the shelf, editor, font selector, and voice calibration.
+
 ## 0.1.2
 
 - Renamed the visible app to Wen Word Processor.

@@ -39,3 +39,11 @@ The four-octave requirement remains an acceptance criterion; the calibration fro
 - Orphaned `.stype.tmp` files are recovered automatically on restart.
 - Crash-recovery fixture restored as a normal document and appeared in the shelf word count.
 - Legacy `Documents/SimpleType` data is migrated into `Documents/Wen`.
+
+## 0.1.3 visual polish
+
+- Tablet document shelf visually checked with three neutral demo documents.
+- Editor title bar, formatting row, voice status, and word/page footer checked on a 2560×1600 tablet emulator.
+- OpenDyslexic font selector displays all three bundled font choices.
+- Voice calibration dialog opens directly from the main editor toolbar.
+- Screenshots captured from the real emulator build with no personal data.

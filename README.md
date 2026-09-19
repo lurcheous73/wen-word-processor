@@ -41,6 +41,16 @@ The debug APK is produced at `app/build/outputs/apk/debug/app-debug.apk`.
 
 Versioned APKs are published as GitHub Release assets in `lurcheous73/wen-word-processor`.
 
+## Screenshots
+
+![Document shelf](docs/screenshots/01-document-shelf.png)
+
+![Editor](docs/screenshots/02-editor.png)
+
+![Font selector](docs/screenshots/03-font-selector.png)
+
+![Voice calibration](docs/screenshots/04-voice-calibration.png)
+
 ## First hardware test
 
 The important next step is testing dictation with the intended speaker across her normal, high, low, and changing registers.

@@ -41,6 +41,7 @@ public class EditorActivity extends Activity {
     private RichEditText editor;
     private TextView stats;
     private TextView voiceStatus;
+    private TextView documentTitle;
     private Button boldButton;
     private Button italicButton;
     private Button underlineButton;
@@ -80,31 +81,51 @@ public class EditorActivity extends Activity {
     private void buildUi() {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setBackgroundColor(Color.rgb(239, 237, 232));
+        root.setBackgroundColor(Color.rgb(244, 242, 238));
+
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setPadding(dp(8), dp(7), dp(8), dp(4));
+
+        Button docs = button("Documents");
+        docs.setContentDescription("Back to documents");
+        docs.setOnClickListener(v -> {
+            saveSync();
+            finish();
+        });
+        header.addView(docs);
+
+        documentTitle = new TextView(this);
+        documentTitle.setText("Untitled");
+        documentTitle.setTextSize(22);
+        documentTitle.setTextColor(Color.rgb(54, 50, 57));
+        documentTitle.setTypeface(FontManager.get(this, FontManager.OPEN_DYSLEXIC));
+        documentTitle.setSingleLine(true);
+        documentTitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        documentTitle.setPadding(dp(16), 0, dp(16), 0);
+        header.addView(documentTitle, new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        Button save = button("Save");
+        save.setContentDescription("Save document");
+        save.setOnClickListener(v -> saveSync());
+        header.addView(save);
+        root.addView(header);
 
         HorizontalScrollView scroll = new HorizontalScrollView(this);
         scroll.setHorizontalScrollBarEnabled(false);
         LinearLayout toolbar = new LinearLayout(this);
         toolbar.setGravity(Gravity.CENTER_VERTICAL);
-        toolbar.setPadding(dp(8), dp(6), dp(8), dp(6));
-
-        Button docs = button("Documents");
-        docs.setOnClickListener(v -> {
-            saveSync();
-            finish();
-        });
-        toolbar.addView(docs);
-
-        Button save = button("Save");
-        save.setOnClickListener(v -> saveSync());
-        toolbar.addView(save);
+        toolbar.setPadding(dp(8), dp(2), dp(8), dp(6));
 
         fontSpinner = new Spinner(this);
         fontSpinner.setAdapter(new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_dropdown_item, FontManager.labels()));
-        toolbar.addView(fontSpinner, new LinearLayout.LayoutParams(dp(190), dp(54)));
+        fontSpinner.setContentDescription("Document font");
+        toolbar.addView(fontSpinner, new LinearLayout.LayoutParams(dp(220), dp(54)));
 
         boldButton = button("B");
+        boldButton.setContentDescription("Bold");
         boldButton.setTypeface(null, android.graphics.Typeface.BOLD);
         boldButton.setOnClickListener(v -> {
             boolean on = editor.toggleBold();
@@ -114,6 +135,7 @@ public class EditorActivity extends Activity {
         toolbar.addView(boldButton);
 
         italicButton = button("I");
+        italicButton.setContentDescription("Italic");
         italicButton.setTypeface(null, android.graphics.Typeface.ITALIC);
         italicButton.setOnClickListener(v -> {
             boolean on = editor.toggleItalic();
@@ -123,12 +145,15 @@ public class EditorActivity extends Activity {
         toolbar.addView(italicButton);
 
         underlineButton = button("U");
+        underlineButton.setContentDescription("Underline");
         underlineButton.setOnClickListener(v -> {
             boolean on = editor.toggleUnderline();
             underlineButton.setText(on ? "U ✓" : "U");
             scheduleSave();
         });
         toolbar.addView(underlineButton);
+
+        toolbar.addView(separator());
 
         Button cut = button("Cut");
         cut.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.cut));
@@ -142,6 +167,8 @@ public class EditorActivity extends Activity {
         paste.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.paste));
         toolbar.addView(paste);
 
+        toolbar.addView(separator());
+
         Button undo = button("Undo");
         undo.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.undo));
         toolbar.addView(undo);
@@ -150,14 +177,18 @@ public class EditorActivity extends Activity {
         redo.setOnClickListener(v -> editor.onTextContextMenuItem(android.R.id.redo));
         toolbar.addView(redo);
 
+        toolbar.addView(separator());
+
         dictateButton = button("Dictate");
+        dictateButton.setContentDescription("Start or stop offline dictation");
         dictateButton.setOnClickListener(v -> {
             if (dictation.isRunning()) stopDictation();
             else requireAudio(AUDIO_DICTATE);
         });
         toolbar.addView(dictateButton);
 
-        Button calibrate = button("Calibrate Voice");
+        Button calibrate = button("Calibrate voice");
+        calibrate.setContentDescription("Calibrate voice recognition");
         calibrate.setOnClickListener(v -> requireAudio(AUDIO_CALIBRATE));
         toolbar.addView(calibrate);
 
@@ -167,7 +198,8 @@ public class EditorActivity extends Activity {
 
         voiceStatus = new TextView(this);
         voiceStatus.setTextSize(15);
-        voiceStatus.setPadding(dp(14), dp(4), dp(14), dp(6));
+        voiceStatus.setTextColor(Color.rgb(92, 87, 96));
+        voiceStatus.setPadding(dp(16), dp(5), dp(16), dp(8));
         root.addView(voiceStatus);
 
         editor = new RichEditText(this);
@@ -177,7 +209,8 @@ public class EditorActivity extends Activity {
 
         stats = new TextView(this);
         stats.setTextSize(15);
-        stats.setPadding(dp(14), dp(8), dp(14), dp(8));
+        stats.setTextColor(Color.rgb(92, 87, 96));
+        stats.setPadding(dp(16), dp(8), dp(16), dp(10));
         root.addView(stats);
 
         editor.addTextChangedListener(new TextWatcher() {
@@ -212,6 +245,7 @@ public class EditorActivity extends Activity {
             DocumentData data = repository.load(fileName);
             title = data.title;
             setTitle(title);
+            if (documentTitle != null) documentTitle.setText(title);
             editor.setText(data.text);
             editor.setDocumentFont(data.fontKey);
             editor.restoreSpans(data.spans);
@@ -418,8 +452,19 @@ public class EditorActivity extends Activity {
         Button b = new Button(this);
         b.setText(text);
         b.setAllCaps(false);
+        b.setTextSize(15);
         b.setMinHeight(dp(50));
+        b.setMinWidth(dp(68));
         return b;
+    }
+
+    private TextView separator() {
+        TextView line = new TextView(this);
+        line.setBackgroundColor(Color.rgb(205, 201, 207));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(1), dp(34));
+        params.setMargins(dp(6), 0, dp(6), 0);
+        line.setLayoutParams(params);
+        return line;
     }
 
     private int dp(int value) {
