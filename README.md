@@ -1,12 +1,12 @@
 # Wen Word Processor
 
-Wen Word Processor is a deliberately small, fully offline Android word processor intended for simple, distraction-free writing.
+Wen Word Processor is a deliberately small, fully offline Android word processor from Brimstone, intended for simple, distraction-free writing.
 
 ## Core behaviour
 
 - Android 10+ (minSdk 29), target API 37.
 - No INTERNET permission and Android cloud backup disabled.
-- All documents live in one app-owned `Documents/Wen` folder. Older `Documents/SimpleType` data is migrated automatically.
+- All documents live in one app-owned `Documents/Wen` folder inside Android's private app storage. Older `Documents/SimpleType` data is migrated automatically.
 - Document list sorts A–Z, Z–A, newest altered, or oldest altered.
 - Each document shows its own word count; the shelf shows the total word count for all documents.
 - Automatic save plus an explicit Save button, atomic file replacement, and interrupted-save recovery.
@@ -50,6 +50,20 @@ Versioned APKs are published as GitHub Release assets in `lurcheous73/wen-word-p
 ![Font selector](docs/screenshots/03-font-selector.png)
 
 ![Voice calibration](docs/screenshots/04-voice-calibration.png)
+
+![About Brimstone](docs/screenshots/05-about-brimstone.png)
+
+## Hardening
+
+- Brimstone About panel and brand mark.
+- Strict document size/version/font/format validation.
+- Corrupt documents are rejected without crashing the shelf.
+- Interrupted valid saves preserve the previous target before recovery.
+- Invalid recovery files are retained as recovery-failed files rather than silently discarded.
+- Editor activity is explicitly non-exported.
+- Backup remains disabled and the APK still requests only microphone access.
+- Offline Vosk model integrity is checked and damaged model files are rebuilt locally.
+- Release builds use R8 code shrinking/resource shrinking, with Vosk/JNA native bindings preserved.
 
 ## First hardware test
 

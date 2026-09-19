@@ -147,13 +147,38 @@ public final class OfflineDictationEngine {
 
     private void ensureModel() throws Exception {
         File dir = modelDirectory();
-        File marker = new File(dir, ".ready");
-        if (marker.exists()) return;
+        if (modelLooksComplete(dir)) return;
+
         deleteTree(dir);
         AssetCopy.copyTree(context.getAssets(), "model-en", dir);
+        if (!modelFilesPresent(dir)) {
+            deleteTree(dir);
+            throw new IllegalStateException("Offline speech model could not be prepared");
+        }
+
+        File marker = new File(dir, ".ready");
         try (FileOutputStream out = new FileOutputStream(marker)) {
             out.write("ready".getBytes(StandardCharsets.UTF_8));
+            out.flush();
+            out.getFD().sync();
         }
+    }
+
+    private static boolean modelLooksComplete(File dir) {
+        return new File(dir, ".ready").isFile() && modelFilesPresent(dir);
+    }
+
+    private static boolean modelFilesPresent(File dir) {
+        return validFile(new File(dir, "am/final.mdl"), 1_000_000)
+                && validFile(new File(dir, "conf/mfcc.conf"), 20)
+                && validFile(new File(dir, "conf/model.conf"), 20)
+                && validFile(new File(dir, "graph/Gr.fst"), 1_000)
+                && validFile(new File(dir, "graph/HCLr.fst"), 1_000)
+                && validFile(new File(dir, "ivector/final.dubm"), 1_000);
+    }
+
+    private static boolean validFile(File file, long minimumBytes) {
+        return file.isFile() && file.length() >= minimumBytes;
     }
 
     private static void deleteTree(File file) {

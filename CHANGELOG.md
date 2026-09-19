@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.4
+
+- Added Brimstone company branding and a dedicated About panel using the Brimstone brand mark.
+- Hardened document parsing with version, size, font and formatting validation.
+- Hardened interrupted-save recovery with previous-target preservation and rollback.
+- Invalid recovery files are retained instead of silently discarded.
+- Restricted legacy migration to Wen document files.
+- Explicitly marked the editor activity non-exported.
+- Added local Vosk model integrity checks and self-repair.
+- Added R8-minified/resource-shrunk release builds with native Vosk/JNA keep rules.
+- Re-captured the screenshot set from the hardened 0.1.4 build.
+
 ## 0.1.3
 
 - Polished the tablet document shelf and editor layout.

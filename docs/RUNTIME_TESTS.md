@@ -40,6 +40,17 @@ The four-octave requirement remains an acceptance criterion; the calibration fro
 - Crash-recovery fixture restored as a normal document and appeared in the shelf word count.
 - Legacy `Documents/SimpleType` data is migrated into `Documents/Wen`.
 
+## 0.1.4 hardening
+
+- Corrupt JSON and oversized document fixtures left Wen running; unreadable documents are isolated from normal parsing.
+- Direct external launch of the non-exported EditorActivity is denied by Android.
+- Invalid temp files are retained as `.recovery-failed` files.
+- Valid temp recovery replaces the interrupted target only after preserving the old target as `.pre-recovery`.
+- Removing `vosk-model-en/am/final.mdl` while leaving `.ready` causes the bundled model to self-repair on the next dictation start.
+- Shrunk/obfuscated release APK was test-signed locally and launched on the emulator; the native speech path produced no class/link/runtime errors.
+- Permission audit still reports `RECORD_AUDIO` only.
+- Brimstone About panel screenshot captured from the hardened build.
+
 ## 0.1.3 visual polish
 
 - Tablet document shelf visually checked with three neutral demo documents.

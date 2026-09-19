@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 
 public final class DocumentRepository {
     private static final String EXT = ".stype";
+    private static final long MAX_FILE_BYTES = 24L * 1024L * 1024L;
     private static final Pattern WORD =
             Pattern.compile("[\\p{L}\\p{N}][\\p{L}\\p{N}'’_-]*");
     private final File dir;
@@ -26,7 +27,10 @@ public final class DocumentRepository {
         if (root == null) root = context.getFilesDir();
         dir = new File(root, "Wen");
         migrateLegacyFolder(new File(root, "SimpleType"));
-        if (!dir.exists()) dir.mkdirs();
+        if (!dir.exists() && !dir.mkdirs())
+            throw new IllegalStateException("Could not create Wen document folder");
+        if (!dir.isDirectory())
+            throw new IllegalStateException("Wen document location is not a folder");
         recoverTemporaryFiles();
     }
 
@@ -40,6 +44,9 @@ public final class DocumentRepository {
         File[] files = legacy.listFiles();
         if (files != null) {
             for (File source : files) {
+                if (!source.isFile()
+                        || !(source.getName().endsWith(EXT)
+                        || source.getName().endsWith(EXT + ".tmp"))) continue;
                 File target = new File(dir, source.getName());
                 try {
                     if (!target.exists())
@@ -58,12 +65,33 @@ public final class DocumentRepository {
             String targetName = temp.getName().substring(0, temp.getName().length() - 4);
             File target = new File(dir, targetName);
             try {
+                readValidated(temp);
+            } catch (Exception invalidTemp) {
+                preserveFile(temp, targetName + ".recovery-failed");
+                continue;
+            }
+
+            try {
                 if (!target.exists()) {
-                    Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                } else {
-                    Files.deleteIfExists(temp.toPath());
+                    moveReplace(temp, target);
+                    continue;
                 }
-            } catch (Exception ignored) {}
+
+                File preserved = preserveFile(target, targetName + ".pre-recovery");
+                if (preserved == null)
+                    continue;
+
+                try {
+                    moveReplace(temp, target);
+                } catch (Exception promotionFailed) {
+                    try {
+                        moveReplace(preserved, target);
+                    } catch (Exception ignored) {}
+                    throw promotionFailed;
+                }
+            } catch (Exception ignored) {
+                // Leave both files in place if recovery cannot be completed safely.
+            }
         }
     }
 
@@ -72,7 +100,11 @@ public final class DocumentRepository {
         String stem = safeFileStem(title);
         File f = new File(dir, stem + EXT);
         int n = 2;
-        while (f.exists()) f = new File(dir, stem + " (" + n++ + ")" + EXT);
+        while (f.exists()) {
+            if (n > 9999)
+                throw new IllegalStateException("Too many documents with the same name");
+            f = new File(dir, stem + " (" + n++ + ")" + EXT);
+        }
 
         DocumentData d = new DocumentData();
         d.title = title;
@@ -81,26 +113,21 @@ public final class DocumentRepository {
     }
 
     public synchronized DocumentData load(String fileName) throws Exception {
-        File f = fileFor(fileName);
-        String raw = new String(Files.readAllBytes(f.toPath()), StandardCharsets.UTF_8);
-        return DocumentData.fromJson(raw);
+        return readValidated(fileFor(fileName));
     }
 
     public synchronized void save(String fileName, DocumentData data) throws Exception {
         File target = fileFor(fileName);
         File temp = new File(dir, target.getName() + ".tmp");
         byte[] bytes = data.toJson().toString(2).getBytes(StandardCharsets.UTF_8);
+        if (bytes.length > MAX_FILE_BYTES)
+            throw new IllegalStateException("Document is too large to save");
         try (FileOutputStream out = new FileOutputStream(temp)) {
             out.write(bytes);
             out.flush();
             out.getFD().sync();
         }
-        try {
-            Files.move(temp.toPath(), target.toPath(),
-                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException e) {
-            Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        }
+        moveReplace(temp, target);
     }
 
     public void delete(String fileName) {
@@ -118,7 +145,8 @@ public final class DocumentRepository {
                 result.add(new DocInfo(
                         f.getName(), d.title, f.lastModified(), countWords(d.text)));
             } catch (Exception ignored) {
-                result.add(new DocInfo(f.getName(), f.getName(), f.lastModified(), 0));
+                result.add(new DocInfo(f.getName(),
+                        "Could not open · " + f.getName(), f.lastModified(), 0));
             }
         }
         return result;
@@ -138,9 +166,55 @@ public final class DocumentRepository {
         return count;
     }
 
+    private DocumentData readValidated(File file) throws Exception {
+        if (file == null || !file.isFile())
+            throw new IllegalArgumentException("Document does not exist");
+        long size = file.length();
+        if (size <= 0 || size > MAX_FILE_BYTES)
+            throw new IllegalArgumentException("Document size is invalid");
+        byte[] bytes = Files.readAllBytes(file.toPath());
+        if (bytes.length > MAX_FILE_BYTES)
+            throw new IllegalArgumentException("Document is too large");
+        return DocumentData.fromJson(new String(bytes, StandardCharsets.UTF_8));
+    }
+
+    private void moveReplace(File source, File target) throws Exception {
+        try {
+            Files.move(source.toPath(), target.toPath(),
+                    StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(source.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
+    private File preserveFile(File source, String preferredName) {
+        if (source == null || !source.exists()) return null;
+        File preserved = new File(dir, preferredName);
+        int suffix = 2;
+        while (preserved.exists())
+            preserved = new File(dir, preferredName + "." + suffix++);
+        try {
+            Files.move(source.toPath(), preserved.toPath(), StandardCopyOption.REPLACE_EXISTING);
+            return preserved;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
     private File fileFor(String fileName) {
+        if (fileName == null || fileName.isBlank())
+            throw new IllegalArgumentException("Missing document name");
         String onlyName = new File(fileName).getName();
-        return new File(dir, onlyName);
+        if (!onlyName.endsWith(EXT))
+            throw new IllegalArgumentException("Unsupported document type");
+        File target = new File(dir, onlyName);
+        try {
+            if (!target.getCanonicalFile().getParentFile().equals(dir.getCanonicalFile()))
+                throw new SecurityException("Invalid document path");
+        } catch (java.io.IOException e) {
+            throw new IllegalArgumentException("Invalid document path", e);
+        }
+        return target;
     }
 
     private static String cleanTitle(String title) {
