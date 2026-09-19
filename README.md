@@ -10,7 +10,7 @@ SimpleType is a deliberately small, offline Android word processor intended for 
 - Document list sorts A–Z, Z–A, newest altered, or oldest altered.
 - Each document shows its own word count; the shelf shows the total word count for all documents.
 - Automatic save plus an explicit Save button.
-- Three document fonts: OpenDyslexic, Sans, and Mono.
+- Three document fonts: OpenDyslexic, OpenDyslexic 3, and OpenDyslexic Mono.
 - Bold, italic, underline, cut, copy, and paste.
 - Android IME integration keeps swipe typing and keyboard prediction available.
 - Approximate page number and total pages are shown while writing.

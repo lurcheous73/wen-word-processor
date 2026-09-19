@@ -2,8 +2,8 @@
 
 ## OpenDyslexic
 
-The OpenDyslexic font family is bundled under the SIL Open Font License.
-A copy of the upstream OFL text is included with the app assets.
+OpenDyslexic, OpenDyslexic 3, and OpenDyslexic Mono are bundled for offline use.
+The current OpenDyslexic family and OpenDyslexic 3 are distributed under the SIL Open Font License; a copy of the upstream OFL text is included with the app assets.
 
 ## Vosk
 
