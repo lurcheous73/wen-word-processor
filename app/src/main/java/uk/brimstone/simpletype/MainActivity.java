@@ -158,8 +158,12 @@ public class MainActivity extends Activity {
                 Comparator.comparing(d -> d.title.toLowerCase(Locale.UK));
         if (mode == 0) documents.sort(alpha);
         else if (mode == 1) documents.sort(alpha.reversed());
-        else if (mode == 2) documents.sort((a, b) -> Long.compare(b.modified, a.modified));
-        else documents.sort(Comparator.comparingLong(d -> d.modified));
+        else if (mode == 2) documents.sort(
+                Comparator.<DocumentRepository.DocInfo>comparingLong(d -> d.modified)
+                        .reversed().thenComparing(alpha));
+        else documents.sort(
+                Comparator.<DocumentRepository.DocInfo>comparingLong(d -> d.modified)
+                        .thenComparing(alpha));
         adapter.notifyDataSetChanged();
     }
 
