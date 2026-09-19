@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.5
+
+- Added Caveat handwriting font for fully offline use.
+- Added a Times New Roman font choice that uses a licensed system copy when available and falls back to Android's serif family when it is not.
+- Added Caveat's SIL Open Font License to the bundled licence assets.
+- Updated the font picker and document validation for the two new font choices.
+
 ## 0.1.4
 
 - Added Brimstone company branding and a dedicated About panel using the Brimstone brand mark.

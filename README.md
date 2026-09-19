@@ -10,7 +10,8 @@ Wen Word Processor is a deliberately small, fully offline Android word processor
 - Document list sorts A–Z, Z–A, newest altered, or oldest altered.
 - Each document shows its own word count; the shelf shows the total word count for all documents.
 - Automatic save plus an explicit Save button, atomic file replacement, and interrupted-save recovery.
-- Three document fonts: OpenDyslexic, OpenDyslexic 3, and OpenDyslexic Mono.
+- Five document font choices: OpenDyslexic, OpenDyslexic 3, OpenDyslexic Mono, Times New Roman, and Caveat.
+- Caveat is the Fontsource/Google handwriting family bundled under OFL. Times New Roman uses a licensed system copy when available and otherwise falls back to Android serif; the proprietary Microsoft font file is not redistributed.
 - Bold, italic, underline, cut, copy, paste, undo, and redo.
 - Android IME integration keeps swipe typing and keyboard prediction available.
 - Approximate page number and total pages are shown while writing.

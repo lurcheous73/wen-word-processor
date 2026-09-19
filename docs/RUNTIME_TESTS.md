@@ -58,3 +58,13 @@ The four-octave requirement remains an acceptance criterion; the calibration fro
 - OpenDyslexic font selector displays all three bundled font choices.
 - Voice calibration dialog opens directly from the main editor toolbar.
 - Screenshots captured from the real emulator build with no personal data.
+
+## 0.1.5 font expansion
+
+- Font picker displays five choices: OpenDyslexic, OpenDyslexic 3, OpenDyslexic Mono, Times New Roman and Caveat.
+- Caveat selection autosaves as `"font": "Caveat"`.
+- Times New Roman selection autosaves as `"font": "Times New Roman"`.
+- Times New Roman remains selected after a hard force-stop and document reopen.
+- Caveat regular/bold TTFs are bundled locally and require no network access.
+- Updated font-picker screenshot captured from the real tablet emulator.
+- Build and lint pass with the expanded font set.
