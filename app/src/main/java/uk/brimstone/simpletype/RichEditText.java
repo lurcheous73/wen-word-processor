@@ -59,16 +59,46 @@ public class RichEditText extends EditText {
                 int end = Math.min(e.length(), changedStart + changedCount);
                 if (end <= changedStart) return;
                 applying = true;
-                if (pendingBold) e.setSpan(new StyleSpan(Typeface.BOLD),
-                        changedStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                if (pendingItalic) e.setSpan(new StyleSpan(Typeface.ITALIC),
-                        changedStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                if (pendingUnderline) e.setSpan(new UnderlineSpan(),
-                        changedStart, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                if (pendingBold) mergeStyleSpan(e, changedStart, end, Typeface.BOLD);
+                if (pendingItalic) mergeStyleSpan(e, changedStart, end, Typeface.ITALIC);
+                if (pendingUnderline) mergeUnderlineSpan(e, changedStart, end);
                 applying = false;
                 changedCount = 0;
             }
         });
+    }
+
+    private static void mergeStyleSpan(Editable e, int start, int end, int style) {
+        int a = start;
+        int b = end;
+        StyleSpan[] spans = e.getSpans(Math.max(0, start - 1),
+                Math.min(e.length(), end + 1), StyleSpan.class);
+        for (StyleSpan span : spans) {
+            if (span.getStyle() != style) continue;
+            int spanStart = e.getSpanStart(span);
+            int spanEnd = e.getSpanEnd(span);
+            if (spanEnd < start || spanStart > end) continue;
+            a = Math.min(a, spanStart);
+            b = Math.max(b, spanEnd);
+            e.removeSpan(span);
+        }
+        e.setSpan(new StyleSpan(style), a, b, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private static void mergeUnderlineSpan(Editable e, int start, int end) {
+        int a = start;
+        int b = end;
+        UnderlineSpan[] spans = e.getSpans(Math.max(0, start - 1),
+                Math.min(e.length(), end + 1), UnderlineSpan.class);
+        for (UnderlineSpan span : spans) {
+            int spanStart = e.getSpanStart(span);
+            int spanEnd = e.getSpanEnd(span);
+            if (spanEnd < start || spanStart > end) continue;
+            a = Math.min(a, spanStart);
+            b = Math.max(b, spanEnd);
+            e.removeSpan(span);
+        }
+        e.setSpan(new UnderlineSpan(), a, b, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     }
 
     public boolean toggleBold() {

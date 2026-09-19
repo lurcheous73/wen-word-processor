@@ -99,9 +99,13 @@ public final class VoiceCalibrator {
                         } else {
                             VoiceProfile profile = buildProfile(rms, pitch);
                             profile.save(activity);
-                            status.setText(String.format(Locale.UK,
-                                    "Calibrated ✓  approximately %.0f–%.0f Hz",
-                                    profile.minPitchHz, profile.maxPitchHz));
+                            if (profile.minPitchHz > 0 && profile.maxPitchHz > 0) {
+                                status.setText(String.format(Locale.UK,
+                                        "Calibrated ✓  approximately %.0f–%.0f Hz",
+                                        profile.minPitchHz, profile.maxPitchHz));
+                            } else {
+                                status.setText("Calibrated ✓");
+                            }
                             record.setText("Calibration complete");
                             record.setEnabled(false);
                             callback.onFinished(profile);
@@ -110,8 +114,11 @@ public final class VoiceCalibrator {
                 } catch (Exception e) {
                     activity.runOnUiThread(() -> {
                         record.setEnabled(true);
-                        status.setText("Could not record. Try again.");
-                        callback.onError(e.getMessage() == null ? "Recording error" : e.getMessage());
+                        String message = e.getMessage() == null
+                                ? "Could not record. Please try again."
+                                : e.getMessage();
+                        status.setText(message);
+                        callback.onError(message);
                     });
                 }
             }, "SimpleType-Calibration").start();
@@ -156,6 +163,8 @@ public final class VoiceCalibrator {
             sum += x * x;
         }
         float rms = (float) Math.sqrt(sum / Math.max(1, all.length));
+        if (rms < 0.0025f)
+            throw new IllegalStateException("That sample was too quiet. Please try again.");
         float pitch = estimatePitch(all);
         return new Sample(rms, pitch);
     }

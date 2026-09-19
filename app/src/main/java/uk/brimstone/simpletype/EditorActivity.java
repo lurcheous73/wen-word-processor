@@ -286,7 +286,8 @@ public class EditorActivity extends Activity {
     private void updateStats() {
         if (stats == null || editor == null) return;
         int words = DocumentRepository.countWords(editor.getText().toString());
-        int pageHeight = dp(1120);
+        int pageHeight = Math.max(dp(600),
+                Math.round(editor.getWidth() * (297f / 210f)));
         int contentHeight = editor.getLayout() == null
                 ? editor.getHeight()
                 : editor.getLayout().getHeight() + editor.getPaddingTop() + editor.getPaddingBottom();
